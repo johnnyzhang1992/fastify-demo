@@ -1,17 +1,51 @@
 // ESM
-import Fastify from "fastify";
-import { fastifyCors } from "@fastify/cors";
+import Fastify from 'fastify'
+import { fastifyCors } from '@fastify/cors'
+import fastifyCompress from '@fastify/compress'
+import fastifyEnv from '@fastify/env'
 
-import routes  from "./src/routes/index.js";
+import routes from './src/routes/index.js'
 
 const fastify = Fastify({
   logger: true,
-});
+})
 
+// -- env 配置 -- 开始 -->>
+const schema = {
+  type: 'object',
+  required: ['PORT'],
+  properties: {
+    PORT: {
+      type: 'string',
+      default: '3000',
+    },
+    DB_USER: {
+      type: 'string',
+      default: ''
+    }
+  },
+}
+
+const options = {
+  confKey: 'config', // optional, default: 'config'
+  schema: schema,
+  data: {
+    PORT: '8080',
+  },
+  dotenv: true,
+}
+
+fastify.register(fastifyEnv, options)
 // 跨域配置
 fastify.register(fastifyCors, {
-  origin: "localhost"
+  origin: 'localhost',
   // put your options here
+})
+// <<-- env 配置 -- 结束---->>
+
+// 压缩
+await fastify.register(fastifyCompress, {
+  threshold: 1024,
 })
 
 // 路由注册
@@ -42,10 +76,10 @@ fastify.register(routes)
  */
 const start = async () => {
   try {
-    await fastify.listen({ port: 8080 });
+    await fastify.listen({ port: 8080 })
   } catch (err) {
-    fastify.log.error(err);
-    process.exit(1);
+    fastify.log.error(err)
+    process.exit(1)
   }
-};
-start();
+}
+start()
