@@ -36,12 +36,13 @@ const options = {
 }
 
 fastify.register(fastifyEnv, options)
+// <<-- env 配置 -- 结束----
+
 // 跨域配置
 fastify.register(fastifyCors, {
-  origin: 'localhost',
+  origin: 'localhost', // 白名单
   // put your options here
 })
-// <<-- env 配置 -- 结束---->>
 
 // 压缩
 await fastify.register(fastifyCompress, {
