@@ -3,12 +3,45 @@ import Fastify from 'fastify'
 import { fastifyCors } from '@fastify/cors'
 import fastifyCompress from '@fastify/compress'
 import fastifyEnv from '@fastify/env'
+import fastifyRateLimit from '@fastify/rate-limit'
+// import fastifyRedis from '@fastify/redis'
+import dayjs from 'dayjs'
+import fastifyStatic from '@fastify/static'
+import path from 'path'
+import { fileURLToPath } from 'url';
+
 
 import routes from './src/routes/index.js'
+import logger from './src/utils/logger.js'
+import userRoutes from './src/routes/user.js'
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const fastify = Fastify({
   logger: true,
 })
+
+// static 静态资源 https://github.com/fastify/fastify-static
+fastify.register(fastifyStatic, {
+  root: path.join(__dirname, 'public'),
+  prefix: '/', // optional: default '/'
+  // constraints: { host: 'localhost' } // optional: default {}
+})
+
+// 限流 https://github.com/fastify/fastify-rate-limit
+await fastify.register(fastifyRateLimit, {
+  max: 100,
+  timeWindow: '1 minute',
+})
+
+// redis https://github.com/fastify/fastify-redis
+// fastify.register(fastifyRedis, {
+//   host: '127.0.0.1',
+//   password: 'your strong password here',
+//   port: 6379, // Redis port
+//   family: 4   // 4 (IPv4) or 6 (IPv6)
+// })
 
 // -- env 配置 -- 开始 -->>
 const schema = {
@@ -21,8 +54,8 @@ const schema = {
     },
     DB_USER: {
       type: 'string',
-      default: ''
-    }
+      default: '',
+    },
   },
 }
 
@@ -51,6 +84,7 @@ await fastify.register(fastifyCompress, {
 
 // 路由注册
 fastify.register(routes)
+fastify.register(userRoutes)
 
 // jwt 鉴权
 // fastify.register(require('@fastify/jwt'), {
@@ -70,6 +104,33 @@ fastify.register(routes)
 //     reply.send(err)
 //   }
 // })
+fastify.addHook('onRequest', async (request, reply) => {
+  try {
+    if (request.method.toLowerCase() === 'get') {
+      logger.info(
+        `time: ${dayjs().format('YYYY-MM-DD HH:mm:ss')};methond: ${
+          request.method
+        };url:${request.url};`
+      )
+    } else {
+      logger.info(
+        `time: ${dayjs().format('YYYY-MM-DD HH:mm:ss')};methond: ${
+          request.method
+        };url:${request.url};body: ${JSON.stringify(request.body)}`
+      )
+    }
+  } catch (err) {
+    reply.send(err)
+  }
+})
+
+// fastify.setErrorHandler(function (error, request, reply) {
+//   if (error.statusCode === 429) {
+//     reply.code(429)
+//     error.message = 'You hit the rate limit! Slow down please!'
+//   }
+//   reply.send(error)
+// })
 
 /**
 
@@ -80,6 +141,7 @@ const start = async () => {
     await fastify.listen({ port: 8080 })
   } catch (err) {
     fastify.log.error(err)
+    logger.error(err)
     process.exit(1)
   }
 }
