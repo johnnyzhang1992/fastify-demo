@@ -8,15 +8,16 @@ import fastifyRateLimit from '@fastify/rate-limit'
 import dayjs from 'dayjs'
 import fastifyStatic from '@fastify/static'
 import path from 'path'
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'url'
 
-
+import dbConnector from './src/utils/db.js'
 import routes from './src/routes/index.js'
 import logger from './src/utils/logger.js'
 import userRoutes from './src/routes/user.js'
+import collectionRoutes from './src/routes/collections.js'
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const fastify = Fastify({
   logger: true,
@@ -40,7 +41,8 @@ await fastify.register(fastifyRateLimit, {
 //   host: '127.0.0.1',
 //   password: 'your strong password here',
 //   port: 6379, // Redis port
-//   family: 4   // 4 (IPv4) or 6 (IPv6)
+//   family: 4   // 4 (IPv4) or 6 (IPv6),
+//   closeClient: true
 // })
 
 // -- env 配置 -- 开始 -->>
@@ -55,7 +57,12 @@ const schema = {
     DB_USER: {
       type: 'string',
       default: '',
-    },
+		},
+    DB_PASSWORD: {
+      type: 'string',
+      default: '',
+		},
+		
   },
 }
 
@@ -71,6 +78,13 @@ const options = {
 fastify.register(fastifyEnv, options)
 // <<-- env 配置 -- 结束----
 
+// 数据库 Mongodb -------------
+fastify.register(dbConnector, {
+	host: '47.116.200.115:27017',
+	db: 'question_db',
+  opts: {}
+})
+
 // 跨域配置
 fastify.register(fastifyCors, {
   origin: 'localhost', // 白名单
@@ -82,9 +96,10 @@ await fastify.register(fastifyCompress, {
   threshold: 1024,
 })
 
-// 路由注册
+// 路由注册 ----------------------
 fastify.register(routes)
 fastify.register(userRoutes)
+fastify.register(collectionRoutes)
 
 // jwt 鉴权
 // fastify.register(require('@fastify/jwt'), {
