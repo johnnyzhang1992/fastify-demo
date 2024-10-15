@@ -52,7 +52,7 @@ const schema = {
   properties: {
     PORT: {
       type: 'string',
-      default: '3000',
+      default: '8080',
     },
     DB_USER: {
       type: 'string',
