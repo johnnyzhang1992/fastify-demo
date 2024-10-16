@@ -15,6 +15,7 @@ import routes from './src/routes/index.js'
 import logger from './src/utils/logger.js'
 import userRoutes from './src/routes/user.js'
 import collectionRoutes from './src/routes/collections.js'
+import poemRoutes from './src/routes/poem.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -81,7 +82,7 @@ fastify.register(fastifyEnv, options)
 // 数据库 Mongodb -------------
 fastify.register(dbConnector, {
 	host: '47.116.200.115:27017',
-	db: 'question_db',
+	db: 'gushi',
   opts: {}
 })
 
@@ -100,6 +101,7 @@ await fastify.register(fastifyCompress, {
 fastify.register(routes)
 fastify.register(userRoutes)
 fastify.register(collectionRoutes)
+fastify.register(poemRoutes)
 
 // jwt 鉴权
 // fastify.register(require('@fastify/jwt'), {

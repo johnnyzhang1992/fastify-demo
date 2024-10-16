@@ -7,12 +7,13 @@ const dbConnector = async (fastify, options) => {
 		const envs = fastify.getEnvs()
 		const { host, db, opts = {} } = options
 		const url = `mongodb://${envs.DB_USER}:${envs.DB_PASSWORD}@${host}/${db}`
+		console.log('db_url:', url)
 		fastify.mongo.connect = mongoose.connect(url, opts)
 		await fastify.mongo.connect
 		fastify.mongo.models = {} // 定义的模型
 	} catch (error) {
 		console.log(error)
-		logger.error(err)
+		logger.error(error)
 	}
 }
 
